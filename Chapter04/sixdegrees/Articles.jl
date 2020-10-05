@@ -41,6 +41,30 @@ function find(url)::Vector{Article}
   articles
 end
 
+function find(keyword::String)::Vector{Article}
+  articles = Article[]
+
+  result =
+    DBInterface.execute(CONN, """SELECT * FROM `articles` WHERE url LIKE "%$keyword%"; """)
+
+  isempty(result) && return articles
+
+  # for i in eachindex(result)
+  #   push!(articles, Article(result.content[i],
+  #                           JSON.parse(result.links[i]),
+  #                           result.title[i],
+  #                           result.image[i],
+  #                           result.url[i]))
+  # end
+  for r in result
+    push!(
+      articles,
+      Article(r.content, JSON.parse(r.links), r.title, r.image, r.url),
+    )
+  end
+  articles
+end
+
 function save(a::Article)
   sql = "INSERT IGNORE INTO articles
             (title, content, links, image, url) VALUES (?, ?, ?, ?, ?)"

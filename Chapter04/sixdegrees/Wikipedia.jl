@@ -1,7 +1,7 @@
 module Wikipedia
 
 using HTTP, Gumbo, Cascadia
-import Cascadia: matchFirst
+import Cascadia: matchFirst, nodeText
 
 include("Articles.jl")
 using .Articles
@@ -43,13 +43,13 @@ function extractlinks(elem)
     e.attributes["href"]
   end |> unique
 end
-
+# FIXME: is this just title ?
 function extracttitle(elem)
-  matchFirst(Selector("#section_0"), elem) |> nodeText
+  matchFirst(Selector("title"), elem) |> nodeText
 end
 
 function extractimage(elem)
-  e = matchFirst(Selector(".content a.image img"), elem)
+  e = matchFirst(Selector("a.image img"), elem)
   isa(e, Nothing) ? "" : e.attributes["src"]
 end
 
