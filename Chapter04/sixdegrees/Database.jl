@@ -7,12 +7,14 @@ const USER = "root"
 const PASS = "root"
 const DB = "six_degrees"
 
-const CONN = MySQL.connect(HOST, USER, PASS, db = DB)
+CONN = DBInterface.connect(MySQL.Connection, HOST, USER, PASS, db=DB)
+
+# const CONN = MySQL.connect(HOST, USER, PASS, db = DB)
 
 export CONN
 
-disconnect() = MySQL.disconnect(CONN)
-
+# disconnect() = MySQL.disconnect(CONN)
+disconnect() = DBInterface.close!(CONN)
 atexit(disconnect)
 
 end
