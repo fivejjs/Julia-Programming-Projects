@@ -11,39 +11,69 @@ struct Article
   image::String
   url::String
 
-  Article(; content = "", links = String[], title = "", image = "", url = "") = new(content, links, title, image, url)
-  Article(content, links, title, image, url) = new(content, links, title, image, url)
+  Article(; content = "", links = String[], title = "", image = "", url = "") =
+    new(content, links, title, image, url)
+  Article(content, links, title, image, url) =
+    new(content, links, title, image, url)
 end
 
-function find(url) :: Vector{Article}
+function find(url)::Vector{Article}
   articles = Article[]
-  
-  result = MySQL.query(CONN, "SELECT * FROM `articles` WHERE url = '$url'")
 
-  isempty(result.url) && return articles
+  result =
+    DBInterface.execute(CONN, "SELECT * FROM `articles` WHERE url = '$url'")
 
-  for i in eachindex(result.url)
-    push!(articles, Article(result.content[i],
-                            JSON.parse(result.links[i]),
-                            result.title[i],
-                            result.image[i],
-                            result.url[i]))
+  isempty(result) && return articles
+
+  # for i in eachindex(result)
+  #   push!(articles, Article(result.content[i],
+  #                           JSON.parse(result.links[i]),
+  #                           result.title[i],
+  #                           result.image[i],
+  #                           result.url[i]))
+  # end
+  for r in result
+    push!(
+      articles,
+      Article(r.content, JSON.parse(r.links), r.title, r.image, r.url),
+    )
   end
+  articles
+end
 
+function find(keyword::String)::Vector{Article}
+  articles = Article[]
+
+  result =
+    DBInterface.execute(CONN, """SELECT * FROM `articles` WHERE url LIKE "%$keyword%"; """)
+
+  isempty(result) && return articles
+
+  # for i in eachindex(result)
+  #   push!(articles, Article(result.content[i],
+  #                           JSON.parse(result.links[i]),
+  #                           result.title[i],
+  #                           result.image[i],
+  #                           result.url[i]))
+  # end
+  for r in result
+    push!(
+      articles,
+      Article(r.content, JSON.parse(r.links), r.title, r.image, r.url),
+    )
+  end
   articles
 end
 
 function save(a::Article)
   sql = "INSERT IGNORE INTO articles
             (title, content, links, image, url) VALUES (?, ?, ?, ?, ?)"
-  stmt = MySQL.Stmt(CONN, sql)
-  result = MySQL.execute!(stmt,
-                          [ a.title,
-                            a.content,
-                            JSON.json(a.links),
-                            a.image,
-                            a.url]
-                        )
+  # stmt = MySQL.Stmt(CONN, sql)
+  stmt = DBInterface.prepare(CONN, sql)
+  result = DBInterface.execute(
+    stmt,
+    [a.title, a.content, JSON.json(a.links), a.image, a.url],
+  )
 end
 
 function createtable()
@@ -58,7 +88,7 @@ function createtable()
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8
   """
 
-  MySQL.execute!(CONN, sql)
+  DBInterface.execute(CONN, sql)
 end
 
 end

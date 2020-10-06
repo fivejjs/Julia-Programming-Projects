@@ -1,5 +1,7 @@
 using Pkg
-pkg"activate ."
+Pkg.activate(".")
+Pkg.instantiate()
+Pkg.resolve()
 
 include("Database.jl")
 include("Wikipedia.jl")

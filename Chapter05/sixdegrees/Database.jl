@@ -2,18 +2,19 @@ module Database
 
 using MySQL
 
-const HOST = "127.0.0.1"
+const HOST = "localhost"
 const USER = "root"
 const PASS = "root"
 const DB = "six_degrees"
-const PORT = 8889
 
-const CONN = MySQL.connect(HOST, USER, PASS, db = DB, port = PORT)
+CONN = DBInterface.connect(MySQL.Connection, HOST, USER, PASS, db=DB)
+
+# const CONN = MySQL.connect(HOST, USER, PASS, db = DB)
 
 export CONN
 
-disconnect() = MySQL.disconnect(CONN)
-
+# disconnect() = MySQL.disconnect(CONN)
+disconnect() = DBInterface.close!(CONN)
 atexit(disconnect)
 
 end

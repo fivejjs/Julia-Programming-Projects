@@ -7,7 +7,7 @@ using ..Gameplay, ..GameSession, ..Wikipedia, ..Wikipedia.Articles
 const HOST = ip"0.0.0.0"
 const PORT = 8888
 const ROUTER = HTTP.Router()
-const SERVER = HTTP.Server(ROUTER)
+# const SERVER = HTTP.Server(ROUTER)
 
 # Functions
 function wikiarticle(game, article)
@@ -103,7 +103,8 @@ end
 
 
 # Routes handlers
-const landingpage = HTTP.HandlerFunction() do req
+const landingpage =  req ->
+begin
   html = """
   <!DOCTYPE html>
   <html>
@@ -136,15 +137,16 @@ const landingpage = HTTP.HandlerFunction() do req
   HTTP.Messages.Response(200, html)
 end
 
-const newgamepage = HTTP.HandlerFunction() do req
+const newgamepage = req -> 
+  begin
   game = parse(UInt8, (replace(req.target, "/new/"=>""))) |> newgamesession
   article = game.articles[1]
   push!(game.history, article)
 
   HTTP.Messages.Response(200, wikiarticle(game, article))
-end
-
-const articlepage = HTTP.HandlerFunction() do req
+  end
+const articlepage = req ->
+ begin
   uri_parts = parseuri(req.target)
   game = gamesession(uri_parts[1])
   article_uri = "/wiki/$(uri_parts[end])"
@@ -160,7 +162,8 @@ const articlepage = HTTP.HandlerFunction() do req
   HTTP.Messages.Response(200, wikiarticle(game, article))
 end
 
-const backpage = HTTP.HandlerFunction() do req
+const backpage = req ->
+begin
   uri_parts = parseuri(req.target)
   game = gamesession(uri_parts[1])
   history_index = parse(UInt8, uri_parts[end])
@@ -171,7 +174,8 @@ const backpage = HTTP.HandlerFunction() do req
   HTTP.Messages.Response(200, wikiarticle(game, article))
 end
 
-const solutionpage = HTTP.HandlerFunction() do req
+const solutionpage =  req ->
+begin
   uri_parts = parseuri(req.target)
   game = gamesession(uri_parts[1])
   game.history = game.articles
@@ -181,19 +185,20 @@ const solutionpage = HTTP.HandlerFunction() do req
   HTTP.Messages.Response(200, wikiarticle(game, article))
 end
 
-const notfoundpage = HTTP.HandlerFunction() do req
+const notfoundpage =  req ->
+begin
   HTTP.Messages.Response(404, "Sorry, this can't be found")
 end
 
 # Routes definitions
-HTTP.register!(ROUTER, "/", landingpage) # root page
-HTTP.register!(ROUTER, "/new/*", newgamepage) # /new/$difficulty_level -- new game
-HTTP.register!(ROUTER, "/*/wiki/*", articlepage) # /$session_id/wiki/$wikipedia_article_url -- article page
-HTTP.register!(ROUTER, "/*/back/*", backpage) # /$session_id/back/$number_of_steps -- go back the navigation history
-HTTP.register!(ROUTER, "/*/solution", solutionpage) # /$session_id/solution -- display the solution
-HTTP.register!(ROUTER, "*", notfoundpage) # everything else -- not found
+HTTP.@register(ROUTER, "GET", "/", landingpage) # root page
+HTTP.@register(ROUTER, "GET", "/new/*", newgamepage) # /new/$difficulty_level -- new game
+HTTP.@register(ROUTER, "GET", "/*/wiki/*", articlepage) # /$session_id/wiki/$wikipedia_article_url -- article page
+HTTP.@register(ROUTER, "GET", "/*/back/*", backpage) # /$session_id/back/$number_of_steps -- go back the navigation history
+HTTP.@register(ROUTER, "GET", "/*/solution", solutionpage) # /$session_id/solution -- display the solution
+HTTP.@register(ROUTER, "GET", "*", notfoundpage) # everything else -- not found
 
 # Start server
-HTTP.serve(SERVER, HOST, PORT)
+HTTP.serve(ROUTER, HOST, PORT)
 
 end

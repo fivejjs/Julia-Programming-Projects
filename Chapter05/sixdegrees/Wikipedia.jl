@@ -1,7 +1,7 @@
 module Wikipedia
 
 using HTTP, Gumbo, Cascadia
-import Cascadia: matchFirst
+import Cascadia: matchFirst, nodeText
 
 include("Articles.jl")
 using .Articles
@@ -43,18 +43,14 @@ function extractlinks(elem)
     e.attributes["href"]
   end |> unique
 end
-
+# FIXME: is this just title ?
 function extracttitle(elem)
-  matchFirst(Selector("#section_0"), elem) |> nodeText
+  matchFirst(Selector("title"), elem) |> nodeText
 end
 
 function extractimage(elem)
-  e = matchFirst(Selector(".content a.image img"), elem)
+  e = matchFirst(Selector("a.image img"), elem)
   isa(e, Nothing) ? "" : e.attributes["src"]
-end
-
-function extractcontent(elem)
-  matchFirst(Selector("#bodyContent"), elem) |> string
 end
 
 function fetchrandom()
@@ -87,14 +83,9 @@ end
 #           extractimage(dom.root))
 # end
 
-# function articleinfo(content)
-#   dom = articledom(content)
-#   (content, extractlinks(dom.root), extracttitle(dom.root), extractimage(dom.root))
-# end
-
 function articleinfo(content)
   dom = articledom(content)
-  (extractcontent(dom.root), extractlinks(dom.root), extracttitle(dom.root), extractimage(dom.root))
+  (content, extractlinks(dom.root), extracttitle(dom.root), extractimage(dom.root))
 end
 
 function persistedarticle(article_content, url)
