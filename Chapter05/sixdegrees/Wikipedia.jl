@@ -32,7 +32,7 @@ function fetchpage(url)
     else
         ""
     end
-    relative_url = collect(eachmatch(r"/wiki/(.*)$", (response.request.parent == nothing ? url : Dict(response.request.parent.headers)["Location"])))[1].match
+    relative_url = collect(eachmatch(r"/wiki/(.*)$", (response.request.parent === nothing ? url : Dict(response.request.parent.headers)["Location"])))[1].match
 
     content, relative_url
 end
