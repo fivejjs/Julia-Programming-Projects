@@ -25,44 +25,44 @@ export fetchrandom, fetchpage, articleinfo, persistedarticle
 # end
 
 function fetchpage(url)
-  url = startswith(url, "/") ? buildurl(url) : url
-  response = HTTP.get(url)
-  content = if response.status == 200 && length(response.body) > 0
-              String(response.body)
-            else
-              ""
-            end
-  relative_url = collect(eachmatch(r"/wiki/(.*)$", (response.request.parent == nothing ? url : Dict(response.request.parent.headers)["Location"])))[1].match
+    url = startswith(url, "/") ? buildurl(url) : url
+    response = HTTP.get(url)
+    content = if response.status == 200 && length(response.body) > 0
+        String(response.body)
+    else
+        ""
+    end
+    relative_url = collect(eachmatch(r"/wiki/(.*)$", (response.request.parent == nothing ? url : Dict(response.request.parent.headers)["Location"])))[1].match
 
-  content, relative_url
+    content, relative_url
 end
 
 
 function extractlinks(elem)
-  map(eachmatch(Selector("a[href^='/wiki/']:not(a[href*=':'])"), elem)) do e
-    e.attributes["href"]
-  end |> unique
+    map(eachmatch(Selector("a[href^='/wiki/']:not(a[href*=':'])"), elem)) do e
+        e.attributes["href"]
+    end |> unique
 end
 # FIXME: is this just title ?
 function extracttitle(elem)
-  matchFirst(Selector("title"), elem) |> nodeText
+    matchFirst(Selector("title"), elem) |> nodeText
 end
 
 function extractimage(elem)
-  e = matchFirst(Selector("a.image img"), elem)
-  isa(e, Nothing) ? "" : e.attributes["src"]
+    e = matchFirst(Selector("a.image img"), elem)
+    isa(e, Nothing) ? "" : e.attributes["src"]
 end
 
 function fetchrandom()
-  fetchpage(RANDOM_PAGE_URL)
+    fetchpage(RANDOM_PAGE_URL)
 end
 
 function articledom(content)
-  if ! isempty(content)
-    return Gumbo.parsehtml(content)
-  end
+    if ! isempty(content)
+        return Gumbo.parsehtml(content)
+    end
 
-  error("Article content can not be parsed into DOM")
+    error("Article content can not be parsed into DOM")
 end
 
 # function articleinfo(content)
@@ -84,19 +84,19 @@ end
 # end
 
 function articleinfo(content)
-  dom = articledom(content)
-  (content, extractlinks(dom.root), extracttitle(dom.root), extractimage(dom.root))
+    dom = articledom(content)
+    (content, extractlinks(dom.root), extracttitle(dom.root), extractimage(dom.root))
 end
 
 function persistedarticle(article_content, url)
-  article = Article(articleinfo(article_content)..., url)
-  save(article)
+    article = Article(articleinfo(article_content)..., url)
+    save(article)
 
-  article
+    article
 end
 
 function buildurl(article_url)
-  PROTOCOL * DOMAIN_NAME * article_url
+    PROTOCOL * DOMAIN_NAME * article_url
 end
 
 end

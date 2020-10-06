@@ -11,7 +11,7 @@ const ROUTER = HTTP.Router()
 
 # Functions
 function wikiarticle(game, article)
-  html = """
+    html = """
   <!DOCTYPE html>
   <html>
   $(head())
@@ -22,14 +22,14 @@ function wikiarticle(game, article)
     $(
       if losinggame(game)
         "<h1>You Lost :( </h1>"
-      else
+    else
         puzzlesolved(game, article) ? "<h1>You Won!</h1>" : ""
-      end
+    end
     )
 
     <h1>$(article.title)</h1>
     <div id="wiki-article">
-      $(replace(article.content, "/wiki/"=>"/$(game.id)/wiki/"))
+      $(replace(article.content, "/wiki/" => "/$(game.id)/wiki/"))
     </div>
   </body>
   </html>
@@ -37,22 +37,22 @@ function wikiarticle(game, article)
 end
 
 function history(game)
-  html = """<ol class="list-group">"""
-  iter = 0
-  for a in game.history
-    html *= """
+    html = """<ol class="list-group">"""
+    iter = 0
+    for a in game.history
+        html *= """
       <li class="list-group-item">
         <a href="/$(game.id)/back/$(iter + 1)">$(a.title)</a>
       </li>
     """
-    iter += 1
-  end
+        iter += 1
+    end
 
-  html * "</ol>"
+    html * "</ol>"
 end
 
 function objective(game)
-  """
+    """
   <div class="jumbotron">
     <h3>Go from
       <span class="badge badge-info">$(game.articles[1].title)</span>
@@ -80,7 +80,7 @@ function objective(game)
 end
 
 function head()
-  """
+    """
   <head>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
@@ -90,22 +90,22 @@ function head()
 end
 
 function puzzlesolved(game, article)
-  article.url == game.articles[end].url
+    article.url == game.articles[end].url
 end
 
 function losinggame(game)
-  game.steps_taken >= Gameplay.MAX_NUMBER_OF_STEPS
+    game.steps_taken >= Gameplay.MAX_NUMBER_OF_STEPS
 end
 
 function parseuri(uri)
-  map(x -> String(x), split(uri, "/", keepempty = false))
+    map(x -> String(x), split(uri, "/", keepempty=false))
 end
 
 
 # Routes handlers
 const landingpage =  req ->
 begin
-  html = """
+    html = """
   <!DOCTYPE html>
   <html>
   $(head())
@@ -134,60 +134,60 @@ begin
   </html>
   """
 
-  HTTP.Messages.Response(200, html)
+    HTTP.Messages.Response(200, html)
 end
 
 const newgamepage = req -> 
   begin
-  game = parse(UInt8, (replace(req.target, "/new/"=>""))) |> newgamesession
-  article = game.articles[1]
-  push!(game.history, article)
+    game = parse(UInt8, (replace(req.target, "/new/" => ""))) |> newgamesession
+    article = game.articles[1]
+    push!(game.history, article)
 
-  HTTP.Messages.Response(200, wikiarticle(game, article))
-  end
+    HTTP.Messages.Response(200, wikiarticle(game, article))
+end
 const articlepage = req ->
  begin
-  uri_parts = parseuri(req.target)
-  game = gamesession(uri_parts[1])
-  article_uri = "/wiki/$(uri_parts[end])"
+    uri_parts = parseuri(req.target)
+    game = gamesession(uri_parts[1])
+    article_uri = "/wiki/$(uri_parts[end])"
 
-  existing_articles = Articles.find(article_uri)
-  article = isempty(existing_articles) ? persistedarticle(fetchpage(article_uri)...) : existing_articles[1]
+    existing_articles = Articles.find(article_uri)
+    article = isempty(existing_articles) ? persistedarticle(fetchpage(article_uri)...) : existing_articles[1]
 
-  push!(game.history, article)
-  game.steps_taken += 1
+    push!(game.history, article)
+    game.steps_taken += 1
 
-  puzzlesolved(game, article) && destroygamesession(game.id)
+    puzzlesolved(game, article) && destroygamesession(game.id)
 
-  HTTP.Messages.Response(200, wikiarticle(game, article))
+    HTTP.Messages.Response(200, wikiarticle(game, article))
 end
 
 const backpage = req ->
 begin
-  uri_parts = parseuri(req.target)
-  game = gamesession(uri_parts[1])
-  history_index = parse(UInt8, uri_parts[end])
+    uri_parts = parseuri(req.target)
+    game = gamesession(uri_parts[1])
+    history_index = parse(UInt8, uri_parts[end])
 
-  article = game.history[history_index]
-  game.history = game.history[1:history_index]
+    article = game.history[history_index]
+    game.history = game.history[1:history_index]
 
-  HTTP.Messages.Response(200, wikiarticle(game, article))
+    HTTP.Messages.Response(200, wikiarticle(game, article))
 end
 
 const solutionpage =  req ->
 begin
-  uri_parts = parseuri(req.target)
-  game = gamesession(uri_parts[1])
-  game.history = game.articles
-  game.steps_taken = Gameplay.MAX_NUMBER_OF_STEPS
-  article = game.articles[end]
+    uri_parts = parseuri(req.target)
+    game = gamesession(uri_parts[1])
+    game.history = game.articles
+    game.steps_taken = Gameplay.MAX_NUMBER_OF_STEPS
+    article = game.articles[end]
 
-  HTTP.Messages.Response(200, wikiarticle(game, article))
+    HTTP.Messages.Response(200, wikiarticle(game, article))
 end
 
 const notfoundpage =  req ->
 begin
-  HTTP.Messages.Response(404, "Sorry, this can't be found")
+    HTTP.Messages.Response(404, "Sorry, this can't be found")
 end
 
 # Routes definitions
