@@ -7,10 +7,13 @@ function setup_data()
   movies = permutedims(movies, (2,1))
   movies = convert(DataFrame, movies)
 
-  names = convert(Array, movies[1, :])[1,:]
+  # names = convert(Array, movies[1, :])[1,:]
+  movie_names = movies[1, :]
 
-  names!(movies, [Symbol(name) for name in names])
-  deleterows!(movies, 1)
+  # rename!(movies, [Symbol(name) for name in names])
+  rename!(movies, [Symbol(name) for name in movie_names])
+  # deleterows!(movies, 1)
+  movies = movies[2:end, :]
   rename!(movies, [Symbol("Movie title") => :User])
 end
 
@@ -18,18 +21,19 @@ function movie_similarity(target_movie)
   similarity = Dict{Symbol,Float64}()
 
   for movie in names(movies[:, 2:end])
-    movie == target_movie && continue
-    ratings = movies[:, [movie, target_movie]]
+    Symbol(movie) == Symbol(target_movie) && continue
 
-    common_users = ratings[(ratings[movie] .>= 0) .& (ratings[target_movie] .> 0), :]
+    ratings = movies[:, [Symbol(movie), Symbol(target_movie)]]
+
+    common_users = ratings[(ratings[:, Symbol(movie)] .>= 0) .& (ratings[:, Symbol(target_movie)] .> 0), :]
 
     correlation = try
-      cor(common_users[movie], common_users[target_movie])
+      cor(common_users[:, Symbol(movie)], common_users[:, Symbol(target_movie)])
     catch
       0.0
     end
 
-    similarity[movie] = correlation
+    similarity[Symbol(movie)] = correlation
   end
 
   # println("The movie $target_movie is similar to $similarity")
